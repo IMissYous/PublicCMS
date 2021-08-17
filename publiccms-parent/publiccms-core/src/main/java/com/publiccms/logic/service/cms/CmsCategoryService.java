@@ -96,7 +96,7 @@ public class CmsCategoryService extends BaseService<CmsCategory> {
 
             CmsCategoryType categoryType = categoryTypeService.getEntity(entity.getTypeId());
             if (null != categoryType && CommonUtils.notEmpty(categoryType.getExtendId())) {
-                List<SysExtendField> categoryTypeExtendList = extendFieldService.getList(categoryType.getExtendId());
+                List<SysExtendField> categoryTypeExtendList = extendFieldService.getList(categoryType.getExtendId(), null, null);
                 Map<String, String> map = ExtendUtils.getSysExtentDataMap(categoryParameters.getExtendDataList(),
                         categoryTypeExtendList);
                 attribute.setData(ExtendUtils.getExtendString(map));
@@ -117,16 +117,14 @@ public class CmsCategoryService extends BaseService<CmsCategory> {
     }
 
     /**
-     * @param siteId
      * @param entity
      * @return
      */
-    public CmsCategory save(Short siteId, CmsCategory entity) {
+    public CmsCategory save(CmsCategory entity) {
         if (entity.isOnlyUrl()) {
             entity.setUrl(entity.getPath());
         }
-        entity.setSiteId(siteId);
-        save(entity);
+        super.save(entity);
         addChildIds(entity.getParentId(), entity.getId());
         return entity;
     }
@@ -190,20 +188,6 @@ public class CmsCategoryService extends BaseService<CmsCategory> {
 
     /**
      * @param siteId
-     * @param oldParentId
-     * @param parentId
-     */
-    public void generateChildIds(short siteId, Integer oldParentId, Integer parentId) {
-        if (null != oldParentId && !oldParentId.equals(parentId)) {
-            generateChildIds(siteId, oldParentId, parentId);
-            generateChildIds(siteId, parentId);
-        } else if (null != parentId && null == oldParentId) {
-            generateChildIds(siteId, parentId);
-        }
-    }
-
-    /**
-     * @param siteId
      * @param parentId
      */
     public void generateChildIds(short siteId, Integer parentId) {
@@ -219,7 +203,7 @@ public class CmsCategoryService extends BaseService<CmsCategory> {
     /**
      * @param siteId
      * @param ids
-     * @return 
+     * @return
      */
     public List<CmsCategory> delete(short siteId, Integer[] ids) {
         List<CmsCategory> entityList = new ArrayList<>();
@@ -275,7 +259,7 @@ public class CmsCategoryService extends BaseService<CmsCategory> {
             entity.setHasStatic(hasStatic);
         }
     }
-    
+
     @Autowired
     private CmsCategoryDao dao;
 }

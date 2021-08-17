@@ -1,30 +1,24 @@
-<!DOCTYPE html>
-<html lang="<@t.page 'lang'/>">
-<head>
-    <meta charset="utf-8">
-    <title><@t.page 'report.user'/></title>
-    <link href="${base}/resource/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
-    <link href="${base}/resource/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" media="screen"/>
-    <script src="${base}/resource/js/jquery-1.12.4.min.js"></script>
-    <script src="${base}/resource/bootstrap/js/bootstrap.min.js"></script>
-    <script src="${base}/resource/js/echarts.common.min.js"></script>
-</head>
-<body>
-<div class="container theme-showcase" role="main">
-    <div class="page-header">
-        <a href=""><h1><@t.page 'report.user'/></h1></a>
-    </div>
-    <div class="row">
-        <div id="register" class="col-lg-4 col-md-6"></div>
-        <div id="login" class="col-lg-4 col-md-6"></div>
-        <div id="operate" class="col-lg-4 col-md-6"></div>
-        <div id="comment" class="col-lg-4 col-md-6"></div>
-    </div>
+<div class="pageFormContent card" layoutH>
+    <fieldset>
+        <legend><@t.page 'report.user'/></legend>
+        <div class="unit">
+            <p>
+                <a class="button" href="report/user.html" target="navTab" rel="report/user"><i class="icon-refresh"></i> <@t.page 'button.refresh'/></a>
+            </p>
+        <div>
+        <div class="unit clearfix">
+            <div id="register" style="width:50%;min-width:400px;float:left;"></div>
+            <div id="login" style="width:50%;min-width:400px;float:left;"></div>
+            <div id="operate" style="width:50%;min-width:400px;float:left;"></div>
+            <div id="userComment" style="width:50%;min-width:400px;float:left;"></div>
+         </div>
+    </fieldset>
+</div>
 <script>
-document.getElementById('register').style.height=document.getElementById('register').offsetWidth+'px';
-document.getElementById('login').style.height=document.getElementById('login').offsetWidth+'px';
-document.getElementById('operate').style.height=document.getElementById('operate').offsetWidth+'px';
-document.getElementById('comment').style.height=document.getElementById('comment').offsetWidth+'px';
+document.getElementById('register').style.height=document.getElementById('register').offsetWidth*0.5+'px';
+document.getElementById('login').style.height=document.getElementById('login').offsetWidth*0.5+'px';
+document.getElementById('operate').style.height=document.getElementById('operate').offsetWidth*0.5+'px';
+document.getElementById('userComment').style.height=document.getElementById('userComment').offsetWidth*0.5+'px';
 echarts.init(document.getElementById('register')).setOption({
     title: {
         text: '<@t.page 'register'/>',
@@ -32,18 +26,22 @@ echarts.init(document.getElementById('register')).setOption({
         x:'center'
     },
     tooltip : {
-        trigger: 'axis',
-           axisPointer: {
-           type: 'cross'
-        }
+        trigger: 'axis'
     },
     toolbox: {
         feature: {
             saveAsImage: {}
         }
     },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
     xAxis: {
         type: 'category',
+        boundaryGap: false,
         data: [<#list 30..0 as a>'${(.now?long-a*86400000)?number_to_date}'<#sep>,</#list>]
     },
     yAxis: {
@@ -53,7 +51,8 @@ echarts.init(document.getElementById('register')).setOption({
     {
            name:'<@t.page 'register'/>',
            type:'line',
-           data:[<#list 30..0 as a><@_sysUserList startRegisteredDate=(.now?long-a*86400000)?number_to_date?string endRegisteredDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_sysUserList><#sep>,</#list>]
+           data:[<#list 30..0 as a><@_sysUserList startRegisteredDate=(.now?long-a*86400000)?number_to_date?string endRegisteredDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_sysUserList><#sep>,</#list>],
+           areaStyle: {}
        }]
 });
 echarts.init(document.getElementById('login')).setOption({
@@ -69,6 +68,12 @@ echarts.init(document.getElementById('login')).setOption({
             saveAsImage: {}
         }
     },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
     xAxis: {
         type: 'category',
         boundaryGap: false,
@@ -81,7 +86,8 @@ echarts.init(document.getElementById('login')).setOption({
     {
         name:'<@t.page 'login'/>',
         type:'line',
-        data:[<#list 30..0 as a><@_logLoginList startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logLoginList><#sep>,</#list>]
+        data:[<#list 30..0 as a><@_logLoginList startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logLoginList><#sep>,</#list>],
+        areaStyle: {}
     }]
 });
 echarts.init(document.getElementById('operate')).setOption({
@@ -97,6 +103,12 @@ echarts.init(document.getElementById('operate')).setOption({
             saveAsImage: {}
         }
     },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
     xAxis: {
         type: 'category',
         boundaryGap: false,
@@ -109,10 +121,11 @@ echarts.init(document.getElementById('operate')).setOption({
     {
         name:'<@t.page 'operate'/>',
         type:'line',
-        data:[<#list 30..0 as a><@_logOperateList channel='web_manager' startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logOperateList><#sep>,</#list>]
+        data:[<#list 30..0 as a><@_logOperateList channel='web_manager' startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logOperateList><#sep>,</#list>],
+        areaStyle: {}
     }]
 });
-echarts.init(document.getElementById('comment')).setOption({
+echarts.init(document.getElementById('userComment')).setOption({
     title: {
         text: '<@t.page 'comment'/>',
         x:'center'
@@ -125,6 +138,12 @@ echarts.init(document.getElementById('comment')).setOption({
             saveAsImage: {}
         }
     },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
     xAxis: {
         type: 'category',
         boundaryGap: false,
@@ -137,10 +156,8 @@ echarts.init(document.getElementById('comment')).setOption({
     {
         name:'<@t.page 'operate'/>',
         type:'line',
-        data:[<#list 30..0 as a><@_logOperateList operate='save.cmsComment' startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logOperateList><#sep>,</#list>]
+        data:[<#list 30..0 as a><@_logOperateList operate='save.cmsComment' startCreateDate=(.now?long-a*86400000)?number_to_date?string endCreateDate=(.now?long-(a-1)*86400000)?number_to_date?string>${page.totalCount}</@_logOperateList><#sep>,</#list>],
+        areaStyle: {}
     }]
 });
 </script>
-</div>
-</body>
-</html>

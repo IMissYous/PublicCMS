@@ -13,6 +13,7 @@
         <#case 'jpg'>
         <#case 'png'>
         <#case 'bmp'>
+        <#case 'jpeg'>
         <#case 'gif'>
             <#return '<img src="'+prefix+filePath+'">'/><#break>
         <#case 'ico'>
@@ -78,7 +79,7 @@
             <tr>
                 <td>
                     <#if !a.directory>
-                        <a href="javascript:;" onclick="DWZ.codemirror.instances[$('textarea.code',navTab.getCurrentPanel()).data('id')].replaceSelection('${useFile(filePath?keep_after('/'),a.fileName,fullPath!)}');$.pdialog.closeCurrent();return false;"><i class="icon-ok icon-large"></i> <@t.page 'select'/></a>
+                        <a href="javascript:;" class="btnText green" onclick="DWZ.codemirror.instances[$('textarea.code',navTab.getCurrentPanel()).data('id')].replaceSelection('${useFile(filePath?keep_after('/'),a.fileName,fullPath!)}');$.pdialog.closeCurrent();return false;"><i class="icon-ok"></i> <@t.page 'select'/></a>
                     </#if>
                 </td>
                 <td class="tree"><div class="${a.directory?then('folder_expandable','file')}" style="width:30px;"></div></td>

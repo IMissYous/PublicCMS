@@ -2,6 +2,7 @@ package com.publiccms.common.handler;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Locale;
 
@@ -75,7 +76,6 @@ public interface RenderHandler {
      * @param defaultValue
      * @return int value
      * @throws Exception
-     * @throws Exception
      */
     Integer getInteger(String name, Integer defaultValue) throws Exception;
 
@@ -86,6 +86,22 @@ public interface RenderHandler {
      * @throws Exception
      */
     Integer getInteger(String name) throws Exception;
+
+    /**
+     * @param name
+     * 
+     * @return byte value
+     * @throws Exception
+     */
+    Byte getByte(String name) throws Exception;
+    
+    /**
+     * @param name
+     * @param defaultValue
+     * @return byte value
+     * @throws Exception
+     */
+    Byte getByte(String name, Byte defaultValue) throws Exception;
 
     /**
      * @param name
@@ -110,6 +126,13 @@ public interface RenderHandler {
      * @throws Exception
      */
     Double getDouble(String name) throws Exception;
+    /**
+     * @param name
+     * 
+     * @return bigDecimal value
+     * @throws Exception
+     */
+    BigDecimal getBigDecimal(String name) throws Exception;
 
     /**
      * @param name

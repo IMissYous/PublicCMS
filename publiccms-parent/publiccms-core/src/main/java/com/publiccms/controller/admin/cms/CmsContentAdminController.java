@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +56,7 @@ import com.publiccms.logic.component.template.ModelComponent;
 import com.publiccms.logic.component.template.TemplateComponent;
 import com.publiccms.logic.service.cms.CmsCategoryModelService;
 import com.publiccms.logic.service.cms.CmsCategoryService;
+import com.publiccms.logic.service.cms.CmsContentAttributeService;
 import com.publiccms.logic.service.cms.CmsContentRelatedService;
 import com.publiccms.logic.service.cms.CmsContentService;
 import com.publiccms.logic.service.log.LogLoginService;
@@ -76,6 +78,8 @@ import com.publiccms.views.pojo.query.CmsContentQuery;
 public class CmsContentAdminController {
     @Autowired
     private CmsContentService service;
+    @Autowired
+    private CmsContentAttributeService attributeService;
     @Autowired
     private SysUserService sysUserService;
     @Autowired
@@ -171,16 +175,21 @@ public class CmsContentAdminController {
         entity = service.saveTagAndAttribute(site.getId(), admin.getId(), entity.getId(), contentParameters, cmsModel,
                 category.getExtendId(), attribute);
         if (null != checked && checked) {
-            service.check(site.getId(), admin, new Long[] { entity.getId() });
+            entity = service.check(site.getId(), admin, entity.getId());
         }
         templateComponent.createContentFile(site, entity, category, categoryModel);// 静态化
-        if (null == entity.getParentId() && !entity.isOnlyUrl()) {
-            service.updateQuote(site.getId(), entity.getId(), contentParameters, cmsModel, category, attribute);
+        if (null == entity.getParentId() && null == entity.getQuoteContentId()) {
+            Set<Integer> categoryIdsSet = service.updateQuote(site.getId(), entity.getId(), contentParameters, cmsModel, category,
+                    attribute);
             if (CommonUtils.notEmpty(contentParameters.getCategoryIds())) {
                 List<CmsCategory> categoryList = categoryService.getEntitys(
                         contentParameters.getCategoryIds().toArray(new Integer[contentParameters.getCategoryIds().size()]));
                 service.saveQuote(site.getId(), entity.getId(), contentParameters, categoryList, cmsModel, category, attribute);
                 if (null != checked && checked) {
+                    if (!categoryIdsSet.isEmpty()) {
+                        categoryList
+                                .addAll(categoryService.getEntitys(categoryIdsSet.toArray(new Integer[categoryIdsSet.size()])));
+                    }
                     for (CmsCategory c : categoryList) {
                         templateComponent.createCategoryFile(site, c, null, null);
                     }
@@ -202,6 +211,7 @@ public class CmsContentAdminController {
             CmsContentAttribute attribute, boolean base64, Date now) {
         entity.setHasFiles(cmsModel.isHasFiles());
         entity.setHasImages(cmsModel.isHasImages());
+        entity.setHasProducts(cmsModel.isHasProducts());
         entity.setOnlyUrl(cmsModel.isOnlyUrl());
         if ((null == checked || !checked) && null != draft && draft) {
             entity.setStatus(CmsContentService.STATUS_DRAFT);
@@ -561,11 +571,8 @@ public class CmsContentAdminController {
     }
 
     private boolean publish(SysSite site, CmsContent entity, SysUser admin) {
-        CmsCategoryModel categoryModel = categoryModelService
-                .getEntity(new CmsCategoryModelId(entity.getCategoryId(), entity.getModelId()));
-        if (null != categoryModel && (admin.isOwnsAllContent() || entity.getUserId() == admin.getId())
-                && (!entity.isOnlyUrl() || null != entity.getQuoteContentId())) {
-            return templateComponent.createContentFile(site, entity, null, categoryModel);
+        if ((admin.isOwnsAllContent() || entity.getUserId() == admin.getId())) {
+            return templateComponent.createContentFile(site, entity, null, null);
         }
         return false;
     }
@@ -576,13 +583,14 @@ public class CmsContentAdminController {
      * @param orderField
      * @param orderType
      * @param request
+     * @param response
      * @param model
      * @return view name
      */
     @RequestMapping("export")
     @Csrf
     public ExcelView export(@RequestAttribute SysSite site, CmsContentQuery queryEntity, String orderField, String orderType,
-            HttpServletRequest request, ModelMap model) {
+            HttpServletRequest request, HttpServletResponse response, ModelMap model) {
         queryEntity.setSiteId(site.getId());
         queryEntity.setDisabled(false);
         queryEntity.setEmptyParent(true);
@@ -599,6 +607,8 @@ public class CmsContentAdminController {
             categoryIds.add(entity.getCategoryId());
             List<Serializable> modelIds = pksMap.computeIfAbsent("modelIds", k -> new ArrayList<>());
             modelIds.add(entity.getModelId());
+            List<Serializable> contentIds = pksMap.computeIfAbsent("contentIds", k -> new ArrayList<>());
+            contentIds.add(entity.getId());
         }
         Map<Long, SysUser> userMap = new HashMap<>();
         if (null != pksMap.get("userIds")) {
@@ -616,10 +626,17 @@ public class CmsContentAdminController {
                 categoryMap.put(entity.getId(), entity);
             }
         }
-
         Map<String, CmsModel> modelMap = modelComponent.getMap(site);
+        Map<Long, CmsContentAttribute> contentAttributeMap = new HashMap<>();
+        if (null != pksMap.get("contentIds")) {
+            List<Serializable> contentIds = pksMap.get("contentIds");
+            List<CmsContentAttribute> entitys = attributeService
+                    .getEntitys(contentIds.toArray(new Serializable[contentIds.size()]));
+            for (CmsContentAttribute entity : entitys) {
+                contentAttributeMap.put(entity.getContentId(), entity);
+            }
+        }
         DateFormat dateFormat = DateFormatUtils.getDateFormat(DateFormatUtils.FULL_DATE_FORMAT_STRING);
-
         ExcelView view = new ExcelView(workbook -> {
             Sheet sheet = workbook.createSheet(
                     LanguagesUtils.getMessage(CommonConstants.applicationContext, request.getLocale(), "page.content"));
@@ -654,10 +671,17 @@ public class CmsContentAdminController {
                     .setCellValue(LanguagesUtils.getMessage(CommonConstants.applicationContext, locale, "page.status"));
             row.createCell(j++)
                     .setCellValue(LanguagesUtils.getMessage(CommonConstants.applicationContext, locale, "page.inspector"));
+            row.createCell(j++)
+                    .setCellValue(LanguagesUtils.getMessage(CommonConstants.applicationContext, locale, "page.content.source"));
+            row.createCell(j++).setCellValue(
+                    LanguagesUtils.getMessage(CommonConstants.applicationContext, locale, "page.content.source_url"));
+            row.createCell(j++)
+                    .setCellValue(LanguagesUtils.getMessage(CommonConstants.applicationContext, locale, "page.content.text"));
 
             SysUser user;
             CmsCategory category;
             CmsModel cmsModel;
+            CmsContentAttribute attribute;
             for (CmsContent entity : entityList) {
                 row = sheet.createRow(i++);
                 j = 0;
@@ -680,8 +704,22 @@ public class CmsContentAdminController {
                         "page.status.content." + entity.getStatus()));
                 user = userMap.get(entity.getCheckUserId());
                 row.createCell(j++).setCellValue(null == user ? null : user.getNickName());
+                attribute = contentAttributeMap.get(entity.getId());
+                row.createCell(j++).setCellValue(null == attribute ? null : attribute.getSource());
+                row.createCell(j++).setCellValue(null == attribute ? null : attribute.getSourceUrl());
+                row.createCell(j++).setCellValue(null == attribute ? null : StringUtils.substring(attribute.getText(), 0, 32767));
+                if (null != attribute && null != attribute.getText() && attribute.getText().length() > 32767) {
+                    long length = attribute.getText().length();
+                    int m = 0;
+                    while ((length = length  - 32767) > 0) {
+                        m++;
+                        row.createCell(j++).setCellValue(StringUtils.substring(attribute.getText(), m * 32767, (m + 1) * 32767));
+                    }
+                }
+
             }
         });
+        view.setFilename(LanguagesUtils.getMessage(CommonConstants.applicationContext, request.getLocale(), "page.content"));
         return view;
     }
 

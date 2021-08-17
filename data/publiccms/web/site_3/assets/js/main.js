@@ -19,9 +19,19 @@ $(function(){
 	$(window).resize(function(){
 		$('header nav>ul').removeAttr('style');
 	});
+	//用户中心手机页面导航效果
+	$('.left-aside h3').click(function(){		
+		if($(this).next().is(':visible')){
+			$('.left-aside ul.show').removeClass('show');			
+		} else {
+			$('.left-aside ul.show').removeClass('show');
+			$(this).next().addClass('show');
+			return false;
+		}
+	});
 	// 头部动态效果
 	$(window).scroll(function(){
-		if(headerHeight-$(window).scrollTop()>0){
+		if(headerHeight-$(window).scrollTop()>40){
 			$('.header').removeClass('fixed-position');
 			$('main').removeClass('no-header');
 		} else {
@@ -50,6 +60,8 @@ $(function(){
 				if(data.superuserAccess&&true==data.superuserAccess){
 					$('.user-logout .master').show();
 				}
+			}else{
+				$('.user-login').show();
 			}
 		});
 	}
@@ -59,6 +71,15 @@ $(function(){
 			$(this).prop('href',$(this).prop('href')+'?returnUrl='+encodeURIComponent(window.location.href));
 		});		
 	}
+	$('.navtab').each(function(){
+		var $box=$(this);
+		$('.tabhead a',$box).click(function(){
+			$(this).parent().addClass('selected').siblings().removeClass('selected');
+			$('.tabcontent',$box).eq($(this).parent().index()).show().siblings().hide();
+			return false;
+		});
+		$('.tabhead a:eq(0)',$box).click();
+	});
 	// 首页焦点图
 	var swiper_index = new Swiper('#index-focus', {
 		loop: true,
@@ -85,6 +106,7 @@ $(function(){
 		loop: true,
 		lazy: true,
 		slidesPerView: 1,
+		mousewheel:true,
 		pagination: {
 			el: '#right-images .swiper-pagination',
 			clickable: true,
@@ -104,7 +126,7 @@ $(function(){
 			}
 		},
 		autoplay: {
-			delay: 3000,
+			delay: 5000,
 			disableOnInteraction: false,
 		}
 	});

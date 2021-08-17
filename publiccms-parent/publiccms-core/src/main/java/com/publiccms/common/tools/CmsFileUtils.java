@@ -1,6 +1,8 @@
 package com.publiccms.common.tools;
 
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -141,10 +143,21 @@ public class CmsFileUtils {
     public static void thumb(String sourceFilePath, String thumbFilePath, int width, int height, String suffix)
             throws IOException {
         try (FileOutputStream outputStream = new FileOutputStream(thumbFilePath);) {
-            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             BufferedImage sourceImage = ImageIO.read(new File(sourceFilePath));
+            if (width > sourceImage.getWidth()) {
+                width = sourceImage.getWidth();
+            }
+            if (height > sourceImage.getHeight()) {
+                height = sourceImage.getHeight();
+            }
+            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Image scaledImage = sourceImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            img.createGraphics().drawImage(scaledImage, 0, 0, null);
+            Graphics2D g = img.createGraphics();
+            if (".png".equalsIgnoreCase(suffix)) {
+                img = g.getDeviceConfiguration().createCompatibleImage(img.getWidth(), img.getHeight(), Transparency.TRANSLUCENT);
+                g = img.createGraphics();
+            }
+            g.drawImage(scaledImage, 0, 0, null);
             if (null != suffix && suffix.length() > 1) {
                 ImageIO.write(img, suffix.substring(1), outputStream);
             } else {
@@ -169,16 +182,18 @@ public class CmsFileUtils {
      */
     public static FileSize getFileSize(String filePath, String suffix) {
         if (IMAGE_FILE_SUFFIXS.contains(suffix)) {
-            try (FileInputStream fis = new FileInputStream(filePath)) {
+            File file = new File(filePath);
+            FileSize fileSize = new FileSize();
+            fileSize.setFileSize(file.length());
+            try (FileInputStream fis = new FileInputStream(file)) {
                 BufferedImage bufferedImg = ImageIO.read(fis);
                 if (null != bufferedImg) {
-                    FileSize fileSize = new FileSize();
                     fileSize.setWidth(bufferedImg.getWidth());
                     fileSize.setHeight(bufferedImg.getHeight());
-                    return fileSize;
                 }
             } catch (IOException e) {
             }
+            return fileSize;
         }
         return EMPTY;
     }
@@ -267,6 +282,22 @@ public class CmsFileUtils {
                 return true;
             } catch (IOException e) {
             }
+        }
+        return false;
+    }
+
+    /**
+     * 移动文件或目录
+     *
+     * @param filePath
+     * @param backupFilePath
+     * @return whether to move successfully
+     */
+    public static boolean delete(String filePath) {
+        File file = new File(filePath);
+        if (CommonUtils.notEmpty(file)) {
+            FileUtils.deleteQuietly(file);
+            return true;
         }
         return false;
     }

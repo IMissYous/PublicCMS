@@ -68,13 +68,13 @@ public class UeditorAdminController {
     protected static final String FIELD_NAME = "file";
     protected static final String SCRAW_TYPE = ".jpg";
 
-    protected static final String[] IMAGE_ALLOW_FILES = new String[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg" };
+    protected static final String[] IMAGE_ALLOW_FILES = new String[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp" };
 
     protected static final String[] VIDEO_ALLOW_FILES = new String[] { ".flv", ".swf", ".mkv", ".avi", ".rm", ".rmvb", ".mpeg",
             ".mpg", ".ogg", ".ogv", ".mov", ".wmv", ".mp4", ".webm", ".mp3", ".wav", ".mid" };
     public static final String[] ALLOW_FILES = ArrayUtils.addAll(ArrayUtils.addAll(VIDEO_ALLOW_FILES, IMAGE_ALLOW_FILES),
             new String[] { ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
-                    ".pptx", ".pdf", ".txt", ".md", ".xml" });
+                    ".pptx", ".pdf", ".txt", ".md", ".xml", ".ofd", ".psd" });
 
     /**
      * @param request
@@ -218,17 +218,18 @@ public class UeditorAdminController {
                         BufferedInputStream inputStream = new BufferedInputStream(entity.getContent());
                         FileType fileType = FileTypeDetector.detectFileType(inputStream);
                         String suffix = fileType.getCommonExtension();
-                        if (CommonUtils.notEmpty(suffix)) {
+                        if (null != fileType.getMimeType() && fileType.getMimeType().startsWith("image/")
+                                && CommonUtils.notEmpty(suffix)) {
                             String fileName = CmsFileUtils.getUploadFileName(suffix);
                             String filePath = siteComponent.getWebFilePath(site, fileName);
                             CmsFileUtils.copyInputStreamToFile(inputStream, filePath);
                             FileSize fileSize = CmsFileUtils.getFileSize(filePath, suffix);
                             logUploadService.save(new LogUpload(site.getId(), admin.getId(), LogLoginService.CHANNEL_WEB_MANAGER,
-                                    CommonConstants.BLANK, CmsFileUtils.getFileType(suffix), entity.getContentLength(),
+                                    CommonConstants.BLANK, CmsFileUtils.getFileType(suffix), fileSize.getFileSize(),
                                     fileSize.getWidth(), fileSize.getHeight(), RequestUtils.getIpAddress(request),
                                     CommonUtils.getDate(), fileName));
                             Map<String, Object> map = getResultMap(true);
-                            map.put("size", entity.getContentLength());
+                            map.put("size", fileSize.getFileSize());
                             map.put("title", fileName);
                             map.put("url", fileName);
                             map.put("source", image);
@@ -238,9 +239,13 @@ public class UeditorAdminController {
                     }
                     EntityUtils.consume(entity);
                 }
-                Map<String, Object> map = getResultMap(true);
-                map.put("list", list);
-                return map;
+                if (list.isEmpty()) {
+                    return getResultMap(false);
+                } else {
+                    Map<String, Object> map = getResultMap(true);
+                    map.put("list", list);
+                    return map;
+                }
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);

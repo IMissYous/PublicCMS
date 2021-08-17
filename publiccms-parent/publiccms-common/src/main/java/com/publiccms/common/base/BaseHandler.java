@@ -72,6 +72,13 @@ public abstract class BaseHandler implements RenderHandler {
      */
     public static final String PARAMETER_TYPE_DOUBLE = "double";
     /**
+     * BigDecimal类型参数
+     * 
+     * BigDecimal type parameter
+     * 
+     */
+    public static final String PARAMETER_TYPE_BIGDECIMAL = "decimal";
+    /**
      * Boolean类型参数
      * 
      * Boolean type parameter
@@ -85,6 +92,13 @@ public abstract class BaseHandler implements RenderHandler {
      * 
      */
     public static final String PARAMETER_TYPE_INTEGER = "integer";
+    /**
+     * Byte类型参数
+     * 
+     * Byte type parameter
+     * 
+     */
+    public static final String PARAMETER_TYPE_BYTE = "byte";
     /**
      * Date类型参数
      * 
@@ -169,6 +183,8 @@ public abstract class BaseHandler implements RenderHandler {
 
     protected abstract Integer getIntegerWithoutRegister(String name) throws Exception;
 
+    protected abstract Byte getByteWithoutRegister(String name) throws Exception;
+
     protected abstract String[] getStringArrayWithoutRegister(String name) throws Exception;
 
     protected abstract String getStringWithoutRegister(String name) throws Exception;
@@ -215,6 +231,23 @@ public abstract class BaseHandler implements RenderHandler {
         try {
             regristerParameter(PARAMETER_TYPE_INTEGER, name, defaultValue);
             Integer result = getIntegerWithoutRegister(name);
+            return CommonUtils.notEmpty(result) ? result : defaultValue;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public Byte getByte(String name) throws Exception {
+        regristerParameter(PARAMETER_TYPE_BYTE, name);
+        return getByteWithoutRegister(name);
+    }
+
+    @Override
+    public Byte getByte(String name, Byte defaultValue) {
+        try {
+            regristerParameter(PARAMETER_TYPE_BYTE, name, defaultValue);
+            Byte result = getByteWithoutRegister(name);
             return CommonUtils.notEmpty(result) ? result : defaultValue;
         } catch (Exception e) {
             return defaultValue;

@@ -46,7 +46,7 @@
 <div class="pageContent">
     <div class="panelBar">
         <ul class="toolBar">
-            <li><a href="logOperate/delete.do?_csrf=<@_csrfToken admin=true/>" title="<@t.page 'confirm.batch_delete'/>" target="selectedTodo" rel="ids"><i class="icon-trash icon-large"></i> <@t.page 'button.batch_delete'/></a></li>
+            <li><a href="logOperate/delete?_csrf=<@_csrfToken admin=true/>" title="<@t.page 'confirm.batch_delete'/>" target="selectedTodo" rel="ids"><i class="icon-trash icon-large"></i> <@t.page 'button.batch_delete'/></a></li>
         </ul>
     </div>
     <table class="table" width="100%" layoutH>
@@ -87,7 +87,7 @@
                     ${a.ip!}
                 </td>
                 <td>${a.createDate!}</td>
-                <td><@t.cut a.content 60 '...<a href="log/operateView.html?id=${a.id}" target="dialog" rel="operateTask">'?no_esc+t.pageMessage('button.view_more')+'</a>'?no_esc/></td>
+                <td class="exclude-translate"><@t.cut a.content 60 '...<a href="log/operateView.html?id=${a.id}" class="btnText" target="dialog" rel="operateTask">'?no_esc+t.pageMessage('button.view_more')+'</a>'?no_esc/></td>
             </tr>
             </#list>
         </tbody>

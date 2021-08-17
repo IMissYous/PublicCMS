@@ -28,16 +28,16 @@ import config.spring.ApplicationConfig;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ApplicationConfig.class)
 public class SysSiteServiceTest {
+    @BeforeAll
+    public static void init() {
+        // 不进入安装程序 数据目录有 database.properties才能进行测试
+        CmsVersion.setInitialized(true);
+    }
+
     @Autowired
     private SysSiteService siteService;
     @Autowired
     private SqlService sqlService;
-
-    @BeforeAll
-    public static void init() {
-     // 不进入安装程序 数据目录有 database.properties才能进行测试
-        CmsVersion.setInitialized(true);
-    }
 
     /**
      * 

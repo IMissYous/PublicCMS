@@ -1,5 +1,6 @@
 package com.publiccms.common.tools;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -103,6 +104,32 @@ public class TemplateModelUtils {
 
     /**
      * @param model
+     * @return byte value
+     * @throws TemplateModelException
+     */
+    public static Byte converByte(TemplateModel model) throws TemplateModelException {
+        if (null != model) {
+            if (model instanceof TemplateSequenceModel) {
+                model = ((TemplateSequenceModel) model).get(0);
+            }
+            if (model instanceof TemplateNumberModel) {
+                return ((TemplateNumberModel) model).getAsNumber().byteValue();
+            } else if (model instanceof TemplateScalarModel) {
+                String s = ((TemplateScalarModel) model).getAsString();
+                if (CommonUtils.notEmpty(s)) {
+                    try {
+                        return Byte.parseByte(s);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param model
      * @return short value
      * @throws TemplateModelException
      */
@@ -181,6 +208,32 @@ public class TemplateModelUtils {
 
     /**
      * @param model
+     * @return bigDecimal value
+     * @throws TemplateModelException
+     */
+    public static BigDecimal converBigDecimal(TemplateModel model) throws TemplateModelException {
+        if (null != model) {
+            if (model instanceof TemplateSequenceModel) {
+                converBigDecimal(((TemplateSequenceModel) model).get(0));
+            }
+            if (model instanceof TemplateNumberModel) {
+                return new BigDecimal(((TemplateNumberModel) model).getAsNumber().doubleValue());
+            } else if (model instanceof TemplateScalarModel) {
+                String s = ((TemplateScalarModel) model).getAsString();
+                if (CommonUtils.notEmpty(s)) {
+                    try {
+                        return new BigDecimal(s);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param model
      * @return string array value
      * @throws TemplateModelException
      */
@@ -234,7 +287,7 @@ public class TemplateModelUtils {
      * @throws TemplateModelException
      * @throws ParseException
      */
-    public static Date converDate(TemplateModel model) throws TemplateModelException, ParseException {
+    public static Date converDate(TemplateModel model) throws TemplateModelException {
         if (null != model) {
             if (model instanceof TemplateSequenceModel) {
                 converDate(((TemplateSequenceModel) model).get(0));
@@ -243,16 +296,16 @@ public class TemplateModelUtils {
                 return ((TemplateDateModel) model).getAsDate();
             } else if (model instanceof TemplateScalarModel) {
                 String temp = StringUtils.trimToEmpty(((TemplateScalarModel) model).getAsString());
-                if (DateFormatUtils.FULL_DATE_LENGTH == temp.length()) {
-                    return DateFormatUtils.getDateFormat(DateFormatUtils.FULL_DATE_FORMAT_STRING).parse(temp);
-                } else if (DateFormatUtils.SHORT_DATE_LENGTH == temp.length()) {
-                    return DateFormatUtils.getDateFormat(DateFormatUtils.SHORT_DATE_FORMAT_STRING).parse(temp);
-                } else {
-                    try {
+                try {
+                    if (DateFormatUtils.FULL_DATE_LENGTH == temp.length()) {
+                        return DateFormatUtils.getDateFormat(DateFormatUtils.FULL_DATE_FORMAT_STRING).parse(temp);
+                    } else if (DateFormatUtils.SHORT_DATE_LENGTH == temp.length()) {
+                        return DateFormatUtils.getDateFormat(DateFormatUtils.SHORT_DATE_FORMAT_STRING).parse(temp);
+                    } else {
                         return new Date(Long.parseLong(temp));
-                    } catch (NumberFormatException e) {
-                        return null;
                     }
+                } catch (ParseException | NumberFormatException e) {
+                    return null;
                 }
             } else if (model instanceof TemplateNumberModel) {
                 return new Date(((TemplateNumberModel) model).getAsNumber().longValue());
